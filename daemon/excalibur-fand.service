@@ -1,0 +1,13 @@
+[Unit]
+Description=Excalibur fan/temp EC reader (publishes /run/excalibur-fans)
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStartPre=-/sbin/modprobe ec_sys write_support=1
+ExecStart=/usr/bin/python3 /usr/local/bin/excalibur-fand.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

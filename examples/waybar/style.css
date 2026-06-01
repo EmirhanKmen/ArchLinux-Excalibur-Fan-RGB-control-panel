@@ -1,0 +1,12 @@
+/* Waybar example styling — append to your ~/.config/waybar/style.css */
+
+#custom-excalibur-fans,
+#custom-excalibur-kbd {
+    padding: 0 10px;
+    margin: 0 2px;
+    color: #cdd6f4;
+}
+
+#custom-excalibur-kbd {
+    color: #89b4fa;
+}

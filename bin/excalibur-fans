@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# excalibur-fans — print Casper Excalibur fan RPMs + CPU temp.
+# Reads the file published by the excalibur-fand daemon (/run/excalibur-fans).
+#
+# Usage:
+#   excalibur-fans            # human readable
+#   excalibur-fans --json     # Waybar JSON (text + tooltip)
+#
+set -euo pipefail
+F="/run/excalibur-fans"
+
+if [ ! -r "$F" ]; then
+    [ "${1:-}" = --json ] && echo '{"text":"fan n/a","tooltip":"excalibur-fand not running"}' || echo "fan n/a (is excalibur-fand running?)"
+    exit 1
+fi
+
+read -r f1 f2 t < "$F"
+if [ "${1:-}" = --json ]; then
+    printf '{"text":"%s / %s RPM","tooltip":"CPU %s°C\\nLeft (CPU) %s RPM\\nRight (GPU) %s RPM"}\n' "$f1" "$f2" "$t" "$f1" "$f2"
+else
+    echo "Left (CPU) ${f1} RPM   Right (GPU) ${f2} RPM   CPU ${t}°C"
+fi

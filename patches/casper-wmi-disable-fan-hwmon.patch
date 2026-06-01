@@ -1,0 +1,22 @@
+Reference patch — hides the casper-wmi fan/pwm hwmon channels.
+
+The WMI fan read (GET_HARDWAREINFO) hangs the kernel in an uninterruptible
+D-state on some Excalibur BIOSes, which freezes `sensors` and the CPU-temp
+reading. Making the hwmon channels invisible stops anything from triggering
+that read. Fans are read from EC RAM by the excalibur-fand daemon instead.
+
+install.sh applies this automatically via sed on /usr/src/casper-wmi-*/casper-wmi.c.
+Equivalent manual change in casper_wmi_hwmon_is_visible():
+
+	switch (type) {
+	case hwmon_fan:
+-		return 0444;	// read only
++		return 0;	// disabled: WMI fan read hangs; fans come from EC instead
+	case hwmon_pwm:
+-		return 0644;	// read and write
++		return 0;	// disabled
+	default:
+		return 0;
+	}
+
+Then rebuild:  sudo dkms build casper-wmi/<ver> --force && sudo dkms install casper-wmi/<ver> --force

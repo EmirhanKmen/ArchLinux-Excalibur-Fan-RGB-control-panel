@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+#
+# excalibur-kbd — Casper Excalibur keyboard backlight control (CLI)
+# Compositor/shell independent: just writes the casper-wmi led_control node.
+#
+# Requires: casper-keyboard-rgb (casper-wmi module) and membership of the
+#           'video' group (so the led_control node is writable without root).
+#
+# Usage:
+#   excalibur-kbd white                 # full white, full brightness
+#   excalibur-kbd on                    # turn on with last colour/brightness
+#   excalibur-kbd off                   # turn off
+#   excalibur-kbd toggle                # toggle on/off
+#   excalibur-kbd color RRGGBB          # set colour (e.g. ff0000), full brightness
+#   excalibur-kbd brightness 0|1|2      # set brightness level
+#   excalibur-kbd raw 612ffffff         # write a raw <zone><mode><bri><RRGGBB> word
+#
+set -euo pipefail
+
+LED="/sys/class/leds/casper::kbd_backlight/led_control"
+STATE="${XDG_CACHE_HOME:-$HOME/.cache}/excalibur-kbd"   # "RRGGBB BRIGHTNESS ON"
+
+[ -w "$LED" ] || { echo "error: $LED not writable. Are you in the 'video' group? (re-login after usermod -aG video \$USER)" >&2; exit 1; }
+
+color="ffffff"; bri=2; on=1
+[ -f "$STATE" ] && read -r color bri on < "$STATE" || true
+
+save() { printf '%s %s %s\n' "$color" "$bri" "$on" > "$STATE"; }
+apply() {
+    if [ "$on" = 1 ] && [ "$bri" -gt 0 ]; then
+        printf '61%s%s' "$bri" "$color" > "$LED"   # zone6, mode1 (static), brightness, RRGGBB
+    else
+        printf '600000000' > "$LED"
+    fi
+    save
+}
+
+cmd="${1:-}"; arg="${2:-}"
+case "$cmd" in
+    white)      color="ffffff"; bri=2; on=1; apply ;;
+    on)         on=1; [ "$bri" -gt 0 ] || bri=2; apply ;;
+    off)        on=0; apply ;;
+    toggle)     [ "$on" = 1 ] && on=0 || { on=1; [ "$bri" -gt 0 ] || bri=2; }; apply ;;
+    color)      [[ "$arg" =~ ^[0-9A-Fa-f]{6}$ ]] || { echo "usage: excalibur-kbd color RRGGBB" >&2; exit 2; }
+                color="${arg,,}"; on=1; [ "$bri" -gt 0 ] || bri=2; apply ;;
+    brightness) [[ "$arg" =~ ^[0-2]$ ]] || { echo "usage: excalibur-kbd brightness 0|1|2" >&2; exit 2; }
+                bri="$arg"; on=$([ "$bri" -gt 0 ] && echo 1 || echo 0); apply ;;
+    raw)        [[ "$arg" =~ ^[0-9A-Fa-f]{9}$ ]] || { echo "usage: excalibur-kbd raw <9 hex digits>" >&2; exit 2; }
+                printf '%s' "${arg,,}" > "$LED" ;;
+    status)     echo "color=$color brightness=$bri on=$on" ;;
+    *)          sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+esac

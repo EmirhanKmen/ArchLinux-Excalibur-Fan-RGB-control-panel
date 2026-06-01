@@ -1,0 +1,22 @@
+// Waybar example — add these modules to your ~/.config/waybar/config.jsonc
+// Put "custom/excalibur-fans" and "custom/excalibur-kbd" into one of your
+// "modules-left/center/right" arrays, then paste the definitions below.
+{
+    // ... "modules-right": ["custom/excalibur-fans", "custom/excalibur-kbd", ...],
+
+    "custom/excalibur-fans": {
+        "exec": "excalibur-fans --json",
+        "return-type": "json",
+        "interval": 2,
+        "format": "󰈐 {}"
+    },
+
+    "custom/excalibur-kbd": {
+        "format": "󰌌 RGB",
+        "tooltip": false,
+        "on-click": "excalibur-kbd toggle",
+        "on-click-right": "excalibur-kbd white",
+        "on-scroll-up": "excalibur-kbd brightness 2",
+        "on-scroll-down": "excalibur-kbd brightness 1"
+    }
+}
