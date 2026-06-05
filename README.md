@@ -63,7 +63,7 @@ LED command format written to `/sys/class/leds/casper::kbd_backlight/led_control
 ## Installation
 
 ```bash
-git clone https://github.com/<you>/caelestia-excalibur
+git clone https://github.com/EmirhanKmen/caelestia-excalibur
 cd caelestia-excalibur
 chmod +x install.sh
 ./install.sh
